@@ -22,12 +22,14 @@ def predict(mean1, var1, mean2, var2) :
     return (new_mean, new_var)
     
 
-measurements = [5., 6., 7., 9., 10.]
-motion = [1., 1., 2., 1., 1.]
-measurement_sig = 4.
-motion_sig = 2.
-mu = 0
-sig = 10000
+measurements = [5.0, 6.0, 7.0, 9.0, 10.0]
+motion = [1.0, 1.0, 2.0, 1.0, 1.0]
+# motion & measurement variances
+measurement_sig = 4.0
+motion_sig = 2.0
+# initial data
+mu = 0.0      # the initial position compared with measurements[0]
+sig = 10000.0 # large -> very uncertain initially -> dominated by 1st measurement
 
 #Please print out ONLY the final values of the mean
 #and the variance in a list [mu, sig]. 
