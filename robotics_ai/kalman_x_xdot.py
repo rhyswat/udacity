@@ -1,8 +1,5 @@
-# Fill in the matrices P, F, H, R and I at the bottom
-#
-# This question requires NO CODING, just fill in the 
-# matrices where indicated. Please do not delete or modify
-# any provided code OR comments. Good luck!
+# Write a function 'filter' that implements a multi-
+# dimensional Kalman Filter for the example given
 
 from math import *
 
@@ -141,70 +138,42 @@ class matrix:
 
 ########################################
 
+# Implement the filter function below
+
 def filter(x, P):
     for n in range(len(measurements)):
-        
-        # prediction
-        x = (F * x) + u
-        P = F * P * F.transpose()
+    	# easier to think of the measurement as being a column vector
+    	# even though it's passed in as a scalar in this example.
+    	z = matrix([[measurements[n]]])
         
         # measurement update
-        Z = matrix([measurements[n]])
-        y = Z.transpose() - (H * x)
-        S = H * P * H.transpose() + R
-        K = P * H.transpose() * S.inverse()
-        x = x + (K * y)
-        P = (I - (K * H)) * P
-    
-    print 'x= '
-    x.show()
-    print 'P= '
-    P.show()
+        y = z - H*x # error in measurement
+        S = H*P*H.transpose() + R
+        K = P*H.transpose()*S.inverse() # Kalman gain
+        x = x + K*y
+        P = (I - K*H)*P
+        
+        # prediction
+        x = F*x + u
+        P = F*P*F.transpose()
+                
+        print 'x= '
+        x.show()
+        print 'P= '
+        P.show()
+
+
 
 ########################################
 
-print "### 4-dimensional example ###"
+measurements = [1, 2, 3]
 
-# measurements = [[5., 10.], [6., 8.], [7., 6.], [8., 4.], [9., 2.], [10., 0.]]
-# initial_xy = [4., 12.]
-
-measurements = [[1., 4.], [6., 0.], [11., -4.], [16., -8.]]
-initial_xy = [-4., 8.]
-
-# measurements = [[1., 17.], [1., 15.], [1., 13.], [1., 11.]]
-# initial_xy = [1., 19.]
-
-dt = 0.1
-
-x = matrix([[initial_xy[0]], [initial_xy[1]], [0.], [0.]]) # initial state (location and velocity)
-u = matrix([[0.], [0.], [0.], [0.]]) # external motion
-
-#### DO NOT MODIFY ANYTHING ABOVE HERE ####
-#### fill this in, remember to use the matrix() function!: ####
-
-# initial uncertainty (told px = py = 0, pxdot = pydot = 1000)
-P =  matrix([[0, 0, 0 ,0],\
-              [0, 0, 0, 0],
-              [0, 0, 1000, 0],
-              [0, 0, 0, 1000]])
-
-# next state function
-F =  matrix([[1, 0, dt, 0],\
-             [0, 1, 0, dt],\
-             [0, 0, 1, 0 ],\
-             [0, 0, 0, 1 ]])
-
-# measurement function
-H = matrix([[1, 0, 0, 0], \
-		    [0, 1, 0, 0]])
-
-# measurement uncertainty
-R = matrix([[0.1, 0], [0, 0.1]]) # told this is 2x2 diagonal(0.1)
-
-# identity matrix
-I =  matrix([[]])
-I.identity(4)
-
-###### DO NOT MODIFY ANYTHING HERE #######
+x = matrix([[0.], [0.]]) # initial state (location and velocity)
+P = matrix([[1000., 0.], [0., 1000.]]) # initial uncertainty
+u = matrix([[0.], [0.]]) # external motion
+F = matrix([[1., 1.], [0, 1.]]) # next state function
+H = matrix([[1., 0.]]) # measurement function
+R = matrix([[1.]]) # measurement uncertainty
+I = matrix([[1., 0.], [0., 1.]]) # identity matrix
 
 filter(x, P)
