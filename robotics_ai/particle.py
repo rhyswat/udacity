@@ -101,56 +101,97 @@ def eval(r, p):
         sum += err
     return sum / float(len(p))
 
-#myrobot = robot()
-#myrobot.set_noise(5.0, 0.1, 5.0)
-#myrobot.set(30.0, 50.0, pi/2)
-#myrobot = myrobot.move(-pi/2, 15.0)
-#print myrobot.sense()
-#myrobot = myrobot.move(-pi/2, 10.0)
-#print myrobot.sense()
+#-------------------------------------------------------
 
-myrobot = robot()
-myrobot = myrobot.move(0.1, 5.0)
-Z = myrobot.sense()
-
-# Make N particles
+# Make N particles and a robot
 N = 1000
-p = []
-for i in range(N):
-    x = robot()
-    x.set_noise(0.05, 0.05, 5.0)
-    p.append(x.move(0.1, 5.0))
+def initialise() :
+    # return a list of particles and a robot object
+    p = []
+    for i in range(N):
+        x = robot()
+        x.set_noise(0.05, 0.05, 5.0)
+        p.append(x)
+    return p, robot()
 
-# importance weights given a measurement Z 
-w = [pp.measurement_prob(Z) for pp in p]
+# compute the similarity weighgts for a list of particles and measurement Z
+def compute_weights(p, Z) :
+    return [r.measurement_prob(Z) for r in p]
 
-#### DON'T MODIFY ANYTHING ABOVE HERE! ENTER CODE BELOW ####
-# You should make sure that p3 contains a list with particles
-# resampled according to their weights.
-# Also, DO NOT MODIFY p.
-
-W = sum(w)
-alphas = [x/W for x in w]
-
+# Resample by cumulative dist. fn.
 import bisect
 def resample_by_cumulative(alphas):
-	cumulative = []
-	tot = 0
-	for i in xrange(N) :
-		tot += alphas[i]
-		cumulative.append(tot)
-	samples = []
-	for i in xrange(N) :
-		r = random.random()
-		j = bisect.bisect_left(cumulative, r)
-		samples.append(p[j])
-	return samples
-	
-def resample_by_wheel(alphas) :
-	return []
+    # this method is O(N log N) for N samples
+    cumulative = []
+    tot = 0
+    for i in xrange(N) :
+        tot += alphas[i]
+        cumulative.append(tot)
+    samples = []
+    for i in xrange(N) :
+        r = random.random()
+        j = bisect.bisect_left(cumulative, r)
+        samples.append(p[j])
+    return samples
 
-p3 = resample_by_cumulative(alphas)
-print p3
-	
+# The class Wheel example
+def resample_by_wheel(weights) :
+    # this method is O(N) for N samples
+    wmax = max(weights)
+    index = random.randint(0, N-1)
+    beta = 0.0
+    samples = []
+    for i in xrange(N) :
+        beta += random.uniform(0, 2*wmax)
+        while weights[index] < beta:
+            beta -= weights[index]
+            index = (index + 1) % N
+        samples.append(p[index])
+    return samples
+
+## The algorithm is based on the fact that, after sorting N uniformly distributed samples,
+## the distances between two consecutive samples is exponentially distributed
+## The algorithm is similar to the resampling wheel algorithm, except that it makes 
+## exactly one revolution around the resampling wheel. 
+## This resampling algorithm is O(N)
+## http://forums.udacity.com/questions/3001328/an-on-unbiased-resampler#cs373
+def resample_wheel_once(p, w):
+    N = len(p)
+    p3 = []
+    #Instantiate diffs to store the distance between two consecutive samples
+    diffs = range(N) 
+    #select N numbers exponentially distributed with parameter lambda = 1
+    for i in range(N):
+        diffs[i] = -log(random.random())
+    # stretch to fit the circumference of the resampling wheel
+    scale = sum(w) / sum(diffs) 
+    index = 0;
+    beta = -random.random() * diffs[0] * scale #randomize the starting position
+    # This for-loop does exactly one revolution around the resampling wheel
+    for i in range(N):
+        beta += diffs[i] * scale
+        # The total number of iterations of this while-loop, summed over all iterations 
+        # of the enclosed for-loop, is bounded by N-1
+        while beta > w[index]:
+            beta -= w[index]
+            index += 1 # no need for %N since once around
+        p3.append(p[index])
+    return p3
 
 
+# the sampling function I use
+sample = resample_wheel_once
+
+#-------------------------------------------------------
+# run the whole lot a few times
+p, myrobot = initialise()
+ntimes = 10
+print eval(myrobot, p)
+for i in xrange(ntimes) :
+    myrobot = myrobot.move(0.1, 0.5)
+    Z = myrobot.sense()
+    w = compute_weights(p, Z)
+    p = sample(p, w)
+    print eval(myrobot, p)
+
+#-------------------------------------------------------
