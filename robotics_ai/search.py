@@ -6,6 +6,9 @@
 # lectures.
 # ----------
 
+import math
+import heapq
+
 # grid is indexed [x][y] strangely
 grid = [[0, 1, 0, 0, 0, 0],
         [0, 1, 0, 0, 0, 0],
@@ -17,7 +20,7 @@ y_max = len(grid[0]) - 1
 
 # initial and goal state
 init = [0, 0]
-goal = [len(grid)-1, len(grid[0])-1]
+goal = [x_max, y_max]
 
 # robot actions, assumed to always complete successfully
 delta = [[-1, 0 ], # go up
@@ -34,10 +37,21 @@ cost = 1
 # visualisation helpers
 # ----------------------------------------
 def print_expansions(expand) :
+    e = max(max(i) for i in expand)
     print ''
-    print 'Expansions table'
-    for i in range(len(expand)):
-        print ' '.join(['  %2d' %j for j in expand[i]])
+    print 'Expansions (max={}):'.format(e)
+    print '* = obstacle, ? = not visited, n = order of visit'
+
+    for x in xrange(len(expand)) :
+        r = []
+        for y in xrange(len(expand[x])) :
+            if grid[x][y] == 1 :
+                r.append('   *')
+            elif expand[x][y] == -1 :
+                r.append('   ?')
+            else :
+                r.append('%4d' % expand[x][y])
+        print ' '.join(r)
     
 def print_grid() :
     for g in grid :
@@ -87,8 +101,18 @@ def print_route(path) :
 # ----------------------------------------
 # a*-search
 # ----------------------------------------
-import heapq
-def search():
+# the heuristic functions
+def l_infinity(x, y) :
+    return min(abs(x - goal[0]), abs(y - goal[1]))
+def manhattan(x, y) :
+    return abs(x - goal[0]) + abs(y - goal[1])
+def euclidian(x, y) :
+    return math.hypot(x - goal[0], y - goal[1])
+def zero(x, y) :
+    return 0
+
+# This is breadth first
+def search(heuristic=zero):
     # ----------------------------------------------------------------------
     # expand[x][y] is the step at which xy was visited
     # -1 means never visited (which might be a good thing)
@@ -108,9 +132,8 @@ def search():
     actions = {tuple(init): (None, None)}
 
     # ----------------------------------------------------------------------
-    # the heuristic function    
-    def heuristic(x,y) :
-        return abs(x - goal[0]) + abs(y - goal[1])
+    # the heuristic functions
+    print 'Heuristic function:',heuristic.__name__
 
     # ----------------------------------------------------------------------
     # the exploration front: (f = g + h(x,y), g, x, y)
@@ -166,7 +189,7 @@ def search():
     return path
 
 if __name__ == '__main__' :
-    path = search()
+    path = search(manhattan)
 
 
 
