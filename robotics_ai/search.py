@@ -4,17 +4,9 @@
 # Modify the the search function so that it becomes
 # an A* search algorithm as defined in the previous
 # lectures.
-#
-# Your function should return the expanded grid
-# which shows, for each element, the count when
-# it was expanded or -1 if the element was never expanded.
-# In case the obstacles prevent reaching the goal,
-# the function should return "Fail"
-#
-# You do not need to modify the heuristic.
 # ----------
 
-# grid is indexed [x][y] oddly
+# grid is indexed [x][y] strangely
 grid = [[0, 1, 0, 0, 0, 0],
         [0, 1, 0, 0, 0, 0],
         [0, 1, 0, 0, 0, 0],
@@ -35,10 +27,11 @@ delta = [[-1, 0 ], # go up
 
 delta_name = ['^', '<', 'v', '>']
 
+# step cost for each action
 cost = 1
 
 # ----------------------------------------
-# helpers
+# visualisation helpers
 # ----------------------------------------
 def print_expansions(expand) :
     print ''
@@ -58,11 +51,13 @@ def build_path(actions) :
         path.append((node,action))
         node, action = actions[node]
     path.reverse()
+    return path
+
+def print_path(path) :
     print ''
     print 'Path: ({} steps)'.format(len(path)-1) # -1 as the path is the list of nodes not steps
     if len(path) > 0 :
-        print ' -> '.join([str(n) for n,a in path])
-    return path
+        print '\n-> '.join([str(n) for n,a in path])
 
 def print_route(path) :
     print ''
@@ -103,9 +98,13 @@ def search():
     # ----------------------------------------------------------------------
     # visited nodes
     marked = set()
-
+    def mark(x, y) :
+        marked.add((x,y))
+  
     # ----------------------------------------------------------------------
-    # action list: {node:(parent, action taken at 'node')}
+    # action list records how we got to 'node' from its parent
+    #        a[node] = (parent node, action taken to get from parent to node)}
+    # can reverse-engineer the path from start to goal from this.
     actions = {tuple(init): (None, None)}
 
     # ----------------------------------------------------------------------
@@ -114,59 +113,60 @@ def search():
         return abs(x - goal[0]) + abs(y - goal[1])
 
     # ----------------------------------------------------------------------
-    xx, yy = init
-    open_list = [(heuristic(xx, yy), 0, xx, yy)]
-    heapq.heapify(open_list)
+    # the exploration front: (f = g + h(x,y), g, x, y)
+    open_list = []
+    def push(g, x, y) :
+        heapq.heappush(open_list, (g + heuristic(x,y), g, x, y))
+
+    push(0, *init)
+    mark(*init)
     found = False
     while len(open_list) > 0:
-        f, g, x, y = heapq.heappop(open_list)
+        # heuristic (ignored inside the loop), cost so far, x and y
+        h, g, x, y = heapq.heappop(open_list)
+
+        # update the expansion table 
+        expand[x][y] = count
+        count += 1
 
         # are we at the goal?
         if x == goal[0] and y == goal[1] :
-            expand[x][y] = count
-            count += 1
             found = True
             break
 
-        # this location is on the path if it's not visited
-        location = (x,y)
-        if location not in marked :
-            expand[x][y] = count
-            count += 1
-            marked.add(location)
-            for i in xrange(len(delta)) :
-                d = delta[i]
-                p = (x + d[0], y + d[1])
-                if p not in marked \
-                   and 0 <= p[0] and p[0] <= x_max \
-                   and 0 <= p[1] and p[1] <= y_max \
-                   and grid[p[0]][p[1]] != 1 :
-                    g2 = g + cost
-                    heapq.heappush(open_list, (g2 + heuristic(*p), g2, p[0], p[1]))
-                    actions[p] = ((x,y), i)
+        # expand this location
+        for i in xrange(len(delta)) :
+            d = delta[i]
+            p = (x + d[0], y + d[1])
+            if p not in marked \
+               and 0 <= p[0] and p[0] <= x_max \
+               and 0 <= p[1] and p[1] <= y_max \
+               and grid[p[0]][p[1]] != 1 :
+                # p is reachable :-)
+                g2 = g + cost           # path cost without heuristic
+                push(g2, *p)            # add to the open list
+                mark(*p)                # mark as visited
+                actions[p] = ((x,y), i) # record how we got here
 
     if not found :
         print '** FAILED **'
         print '   No route from {} to {} in this grid'.format(init, goal)
         print_grid()
-        return 'fail'
+        return None
     
-    # -- visualisation -------------------------------------------------
-    # otherwise...
-    # show the expansions
-    print_expansions(expand)
-        
-    # make the funky path depiction
+    # ok :-) -- build the path from the action records
     path = build_path(actions)
-
-    # print a visual grid with a bounding edge
-    print_route(path)
-    # ----------------------------------------------------------------------
     
-        
-    return expand #Leave this line for grading purposes!
+    # visualisation ------------------------------------------------
+    print_expansions(expand)
+    print_path(path)
+    print_route(path)
+    # --------------------------------------------------------------
 
-search()
+    return path
+
+if __name__ == '__main__' :
+    path = search()
 
 
 
