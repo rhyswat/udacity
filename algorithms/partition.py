@@ -49,36 +49,36 @@ def max_k(L, k, first=False, s=1) :
     if ix < N-k  : return max_k(right, k, s=s)
     return right + [v] + max_k(left, k - (1 + len(right)), s=s)
 
+if __name__ == '__main__' :
+    U = 20
+    K = 5
+    test = range(1,U+1)
+    random.shuffle(test)
 
-U = 20
-K = 5
-test = range(1,U+1)
-random.shuffle(test)
-
-correct_max = set(xrange(U-K+1, U+1))
-correct_min = set(xrange(1, K+1))
-failures_max = 0
-failures_min = 0
-N = 1000
-for i in xrange(N) :
-    try :
-        m = set(max_k(test, K, first=True))
-        if m != correct_max :
+    correct_max = set(xrange(U-K+1, U+1))
+    correct_min = set(xrange(1, K+1))
+    failures_max = 0
+    failures_min = 0
+    N = 1000
+    for i in xrange(N) :
+        try :
+            m = set(max_k(test, K, first=True))
+            if m != correct_max :
+                failures_max += 1
+                print 'FAIL',m
+        except ValueError :
             failures_max += 1
-            print 'FAIL',m
-    except ValueError :
-        failures_max += 1
 
-    try :
-        m = set(min_k(test, K))
-        if m != correct_min :
+        try :
+            m = set(min_k(test, K))
+            if m != correct_min :
+                failures_min += 1
+                print 'FAIL',m
+        except ValueError :
             failures_min += 1
-            print 'FAIL',m
-    except ValueError :
-        failures_min += 1
 
-print 'max-k failure rate is {:.2f}%'.format(100*float(failures_max)/N)
-print 'min-k failure rate is {:.2f}%'.format(100*float(failures_min)/N)
+    print 'max-k failure rate is {:.2f}%'.format(100*float(failures_max)/N)
+    print 'min-k failure rate is {:.2f}%'.format(100*float(failures_min)/N)
 
 
 
