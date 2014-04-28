@@ -11,9 +11,9 @@ measurements = ['red', 'green']
 motions = [1,1]
 pHit = 0.6
 pMiss = 0.2
-pExact = 0.8
-pOvershoot = 0.1
-pUndershoot = 0.1
+pExact = 1.0 # 0.8
+pOvershoot = 0 # 0.1
+pUndershoot = 0 # 0.1
 
 # Sensing: P(x|Z) = P(x)*P(Z = actual state of the world)
 def sense(p, Z):
@@ -35,12 +35,24 @@ def move(p, U):
         q.append(s)
     return q
 
+# tidy printing
+s = ['%.2f']*len(world)
+s = ', '.join(s)
+s = '[' + s + ']'
+def print_probs(pre, probs) :
+    q = '{:>10}: {}'.format(pre, s%tuple(probs))
+    print q
 
 # assume num motions = num measurements
 # then iterate sense>moves>sense>move>...
+print ''
+print_probs('Initial', p)
 for i in xrange(len(measurements)) : 
     p = sense(p, measurements[i])
+    print_probs('Sense {}'.format(i), p)
     p = move(p, motions[i])
+    print_probs('Move {}'.format(i), p)
+    print ''
 
 # the most likely location of the robot is the index with max probability
 def argmax(p) :
