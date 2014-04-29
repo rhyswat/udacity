@@ -1,8 +1,24 @@
-#
-# Write partition to return a new array with 
-# all values less then `v` to the left 
-# and all values greater then `v` to the right
-#
+"""
+--------------------------------------------------------------------------------
+Project: prototyping
+
+Description: an implementation of rapid partitioning and aggregation routines.
+             Based on the Udacity Algorithms course.
+--------------------------------------------------------------------------------
+Copyright:
+
+This is an unpublished work the copyright in which vests in Tekever Ltd.
+All rights reserved.
+
+The information contained herein is the property of Tekever Ltd and is supplied
+without liability for errors or omissions. No part may be reproduced, disclosed
+or used except as authorised by contract or other written permission.
+
+The copyright and the foregoing restriction on reproduction, disclosure and use
+extend to all media in which the information may be embodied.
+--------------------------------------------------------------------------------
+"""
+
 
 import collections
 import random
@@ -23,7 +39,6 @@ def rank(L, v):
 
 def partition(L, v):
     """Partitions L into (less than v, v, greater than v)."""
-    r = rank(L, v)
     return ([x for x in L if x < v], [v], [x for x in L if x > v])
 
 def min_k(L, k) :
